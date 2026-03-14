@@ -1,0 +1,229 @@
+.incident-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.incident-form .form-panel {
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.52), rgba(15, 23, 42, 0.34));
+  padding: 16px;
+}
+
+.incident-form .panel-title {
+  margin: 0;
+  font-size: 1.03rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.incident-form .panel-subtitle {
+  margin: 6px 0 12px;
+  font-size: 0.84rem;
+  color: #cbd5e1;
+}
+
+.incident-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.incident-form label {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.incident-form input,
+.incident-form select,
+.incident-form textarea {
+  width: 100%;
+  background: rgba(2, 6, 23, 0.62);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  color: #f8fafc;
+  border-radius: 10px;
+  padding: 11px 12px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.incident-form input:focus,
+.incident-form select:focus,
+.incident-form textarea:focus {
+  border-color: rgba(59, 130, 246, 0.75);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
+}
+
+.incident-form textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.incident-form .readonly-input {
+  opacity: 0.95;
+  background: rgba(15, 23, 42, 0.35);
+}
+
+.incident-form .location-input-group {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+}
+
+.incident-form .location-btn {
+  white-space: nowrap;
+  background: linear-gradient(135deg, #1d4ed8, #2563eb);
+  color: #ffffff;
+  border: 1px solid rgba(59, 130, 246, 0.8);
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.incident-form .location-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+}
+
+.incident-form .location-btn:disabled {
+  opacity: 0.75;
+  cursor: wait;
+}
+
+.incident-form .location-status {
+  margin-top: 6px;
+  color: #cbd5e1;
+}
+
+.incident-form .location-status.is-valid {
+  color: #86efac;
+}
+
+.incident-form .location-manual-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.incident-form .location-manual-grid label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.8rem;
+  color: #cbd5e1;
+}
+
+.incident-picker-map-wrap {
+  margin-top: 12px;
+}
+
+.incident-form .location-chip-row {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.incident-form .location-chip-label {
+  font-size: 0.78rem;
+  color: #cbd5e1;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.incident-form .location-chip-value {
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #bae6fd;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.incident-picker-map-wrap .picker-help {
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+  color: #bfdbfe;
+}
+
+.incident-picker-map {
+  height: 260px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.incident-location-marker {
+  background: transparent;
+  border: none;
+}
+
+.incident-location-pin {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ef4444;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.28);
+}
+
+.incident-form .error-message {
+  background: rgba(127, 29, 29, 0.42);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  color: #fecaca;
+  padding: 12px;
+  border-radius: 10px;
+}
+
+.incident-form .success-message {
+  background: rgba(6, 78, 59, 0.42);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  color: #a7f3d0;
+  padding: 12px;
+  border-radius: 10px;
+}
+
+.incident-form .submit-btn {
+  margin-top: 2px;
+  border: none;
+  border-radius: 12px;
+  padding: 13px 18px;
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  color: #111827;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.incident-form .submit-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(249, 115, 22, 0.35);
+}
+
+.incident-form .submit-btn:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+@media (max-width: 768px) {
+  .incident-form .form-panel {
+    padding: 12px;
+  }
+
+  .incident-form .location-input-group,
+  .incident-form .location-manual-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .incident-picker-map {
+    height: 220px;
+  }
+}

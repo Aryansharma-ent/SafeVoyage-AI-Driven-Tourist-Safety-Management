@@ -1,0 +1,25 @@
+{
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "express-async-handler": "^1.2.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.3.0",
+    "morgan": "^1.10.1",
+    "nodemon": "^3.1.14"
+  },
+  "name": "hackthon",
+  "version": "1.0.0",
+  "description": "The **Tourist Risk Intelligence Platform** is a smart safety system designed to help protect tourists traveling in unfamiliar or high-risk regions. The platform combines **AI-based risk scoring, geospatial mapping, and emergency response tools** to proactively identify dangerous areas and enable rapid assistance when incidents occur.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon server/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
