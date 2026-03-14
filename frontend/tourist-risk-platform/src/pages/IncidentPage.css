@@ -79,5 +79,32 @@
   .incident-form-wrapper {
     padding: 24px;
   }
+
+  .back-link {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .incident-container {
+    padding: 28px 12px;
+  }
+
+  .incident-header {
+    margin-bottom: 26px;
+  }
+
+  .incident-header h1 {
+    font-size: 1.7rem;
+  }
+
+  .incident-header p {
+    font-size: 0.95rem;
+  }
+
+  .incident-form-wrapper {
+    padding: 14px;
+  }
 }
 

@@ -1,8 +1,17 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { FaHome, FaMap, FaExclamationTriangle, FaPhone, FaBell } from "react-icons/fa";
+import { useLocation } from "react-router-dom";
+import { FaHome, FaMap, FaExclamationTriangle, FaPhone, FaBell, FaBars, FaTimes } from "react-icons/fa";
 import "./Navbar.css";
 
 function Navbar() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname]);
+
   return (
     <nav className="navbar">
       <div className="navbar-container">
@@ -26,7 +35,18 @@ function Navbar() {
             <div className="logo-subtitle">AI TOURIST SAFETY PLATFORM</div>
           </div>
         </Link>
-        <ul className="nav-menu">
+
+        <button
+          type="button"
+          className="nav-toggle"
+          aria-label="Toggle navigation menu"
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen((prev) => !prev)}
+        >
+          {menuOpen ? <FaTimes /> : <FaBars />}
+        </button>
+
+        <ul className={`nav-menu ${menuOpen ? "open" : ""}`}>
           <li className="nav-item">
             <Link to="/" className="nav-link">
               <FaHome /> Home
@@ -48,7 +68,8 @@ function Navbar() {
             </Link>
           </li>
         </ul>
-        <div className="nav-actions">
+
+        <div className={`nav-actions ${menuOpen ? "open" : ""}`}>
           <button className="nav-bell">
             <FaBell />
             <span className="notification-badge">3</span>

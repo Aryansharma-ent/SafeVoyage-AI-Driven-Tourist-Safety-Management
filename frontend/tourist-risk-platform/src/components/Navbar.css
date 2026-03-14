@@ -9,6 +9,7 @@
 }
 
 .navbar-container {
+  position: relative;
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 40px;
@@ -16,6 +17,25 @@
   justify-content: space-between;
   align-items: center;
   gap: 2rem;
+}
+
+.nav-toggle {
+  display: none;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #cbd5e1;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 1rem;
+}
+
+.nav-toggle:hover {
+  background: rgba(30, 58, 138, 0.45);
+  transform: none;
 }
 
 .navbar-logo {
@@ -174,19 +194,75 @@
 }
 
 @media (max-width: 768px) {
+  .navbar {
+    padding: 0.72rem 0;
+  }
+
   .navbar-container {
-    padding: 0 20px;
-    flex-wrap: wrap;
+    padding: 0 14px;
+    gap: 0.75rem;
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+
+  .nav-toggle {
+    display: inline-flex;
+    margin-left: auto;
   }
 
   .nav-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 10px;
+    right: 10px;
+    flex-direction: column;
+    gap: 4px;
+    background: rgba(15, 23, 42, 0.97);
+    border: 1px solid rgba(56, 189, 248, 0.22);
+    border-radius: 12px;
+    box-shadow: 0 16px 32px rgba(2, 6, 23, 0.45);
+    max-height: 0;
+    overflow: hidden;
+    padding: 0;
+    transition: max-height 0.25s ease, padding 0.25s ease;
+    z-index: 140;
+  }
+
+  .nav-menu.open {
+    max-height: 340px;
+    padding: 8px;
+  }
+
+  .nav-item {
     width: 100%;
-    gap: 0.25rem;
   }
 
   .nav-link {
-    font-size: 0.8rem;
-    padding: 6px 12px;
+    width: 100%;
+    font-size: 0.9rem;
+    padding: 10px 12px;
+    border-radius: 8px;
+  }
+
+  .nav-actions {
+    display: none;
+  }
+
+  .nav-actions.open {
+    position: absolute;
+    top: calc(100% + 356px);
+    left: 10px;
+    right: 10px;
+    margin-left: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-radius: 0 0 12px 12px;
+    border: 1px solid rgba(56, 189, 248, 0.18);
+    border-top: none;
+    background: rgba(15, 23, 42, 0.97);
+    z-index: 139;
   }
 
   .logo-text {

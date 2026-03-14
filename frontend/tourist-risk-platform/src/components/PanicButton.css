@@ -61,3 +61,29 @@
   max-width: 400px;
   font-size: 0.95rem;
 }
+
+@media (max-width: 768px) {
+  .panic-button {
+    width: 172px;
+    height: 172px;
+    font-size: 1.25rem;
+  }
+
+  .panic-button-container {
+    gap: 14px;
+  }
+}
+
+@media (max-width: 420px) {
+  .panic-button {
+    width: 148px;
+    height: 148px;
+    font-size: 1.08rem;
+    border-width: 4px;
+  }
+
+  .panic-info {
+    font-size: 0.86rem;
+    max-width: 100%;
+  }
+}
