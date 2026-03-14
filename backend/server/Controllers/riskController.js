@@ -3,6 +3,10 @@ import Incident from "../Models/Incident.js";
 import AsyncHandler from 'express-async-handler'
 import { buildAreaPrediction } from "../utils/riskZoneEngine.js";
 
+const SURGE_RECENT_MINUTES = 30;
+const SURGE_BASELINE_MINUTES = 360;
+const SURGE_MIN_INCIDENTS = 2;
+
 const toRadians = (degree) => degree * (Math.PI / 180);
 
 const haversineDistanceMeters = (lat1, lon1, lat2, lon2) => {
@@ -20,6 +24,87 @@ const haversineDistanceMeters = (lat1, lon1, lat2, lon2) => {
 };
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+const metersToLatitudeDelta = (meters) => meters / 111320;
+
+const metersToLongitudeDelta = (meters, latitude) => {
+    const cosValue = Math.cos(toRadians(latitude));
+    const safeCos = Math.abs(cosValue) < 0.1 ? 0.1 : Math.abs(cosValue);
+    return meters / (111320 * safeCos);
+};
+
+const getNearbyIncidentQuery = (lat, lon, radiusMeters, createdAtRange) => {
+    const latDelta = metersToLatitudeDelta(radiusMeters);
+    const lonDelta = metersToLongitudeDelta(radiusMeters, lat);
+
+    return {
+        "location.lat": { $gte: lat - latDelta, $lte: lat + latDelta },
+        "location.lon": { $gte: lon - lonDelta, $lte: lon + lonDelta },
+        createdAt: createdAtRange,
+    };
+};
+
+const resolveSurgeLevel = ({ score, ratio, recentCount }) => {
+    if (recentCount < SURGE_MIN_INCIDENTS) return "none";
+    if (score >= 80 || ratio >= 4) return "critical";
+    if (score >= 60 || ratio >= 2.7) return "high";
+    if (score >= 40 || ratio >= 1.8) return "medium";
+    return "none";
+};
+
+const resolveTrendDirection = (recentCount, previousCount) => {
+    if (recentCount >= previousCount + 2 || recentCount > previousCount * 1.2) {
+        return "rising";
+    }
+    if (previousCount >= recentCount + 2 || previousCount > recentCount * 1.2) {
+        return "falling";
+    }
+    return "stable";
+};
+
+const calculateSurgeForArea = async (lat, lon, geofenceRadius = 700) => {
+    const now = new Date();
+    const recentStart = new Date(now.getTime() - SURGE_RECENT_MINUTES * 60 * 1000);
+    const baselineStart = new Date(now.getTime() - SURGE_BASELINE_MINUTES * 60 * 1000);
+    const previousWindowStart = new Date(recentStart.getTime() - SURGE_RECENT_MINUTES * 60 * 1000);
+    const radiusMeters = clamp(Number(geofenceRadius || 700), 350, 2200);
+
+    const [recentCount, baselineCount, previousCount] = await Promise.all([
+        Incident.countDocuments(
+            getNearbyIncidentQuery(lat, lon, radiusMeters, { $gte: recentStart, $lte: now })
+        ),
+        Incident.countDocuments(
+            getNearbyIncidentQuery(lat, lon, radiusMeters, { $gte: baselineStart, $lt: recentStart })
+        ),
+        Incident.countDocuments(
+            getNearbyIncidentQuery(lat, lon, radiusMeters, { $gte: previousWindowStart, $lt: recentStart })
+        ),
+    ]);
+
+    const baselineMinutesOnly = SURGE_BASELINE_MINUTES - SURGE_RECENT_MINUTES;
+    const expectedRecent = Math.max(
+        0.5,
+        (baselineCount * SURGE_RECENT_MINUTES) / Math.max(1, baselineMinutesOnly)
+    );
+    const ratio = recentCount / expectedRecent;
+    const zScore = (recentCount - expectedRecent) / Math.sqrt(expectedRecent + 1);
+    const surgeScore = clamp((ratio - 1) * 35 + zScore * 12 + recentCount * 4, 0, 100);
+    const surgeLevel = resolveSurgeLevel({ score: surgeScore, ratio, recentCount });
+    const trendDirection = resolveTrendDirection(recentCount, previousCount);
+
+    return {
+        surgeScore: Number(surgeScore.toFixed(1)),
+        surgeLevel,
+        spikeRatio: Number(ratio.toFixed(2)),
+        trendDirection,
+        recentIncidentCount: recentCount,
+        expectedIncidentCount: Number(expectedRecent.toFixed(2)),
+        baselineIncidentCount: baselineCount,
+        previousWindowCount: previousCount,
+        recentWindowMinutes: SURGE_RECENT_MINUTES,
+        baselineWindowMinutes: SURGE_BASELINE_MINUTES,
+    };
+};
 
 const calculateGeofenceRadiusFromIncidents = async (centerLat, centerLon) => {
     // Pull nearby incidents around the zone center to estimate practical alert radius.
@@ -51,14 +136,29 @@ const calculateGeofenceRadiusFromIncidents = async (centerLat, centerLon) => {
 
 //@GET get all risk area reports
 export const getRisk = AsyncHandler(async(req,res)=>{
-    const Risks = await RiskZone.find();
+    const Risks = await RiskZone.find().lean();
 
     if(!Risks){
         res.status(400)
         throw new Error("Risk areas don't exist")
     }
 
-    res.status(200).json(Risks)
+    const enrichedRisks = await Promise.all(
+        Risks.map(async (risk) => {
+            const surge = await calculateSurgeForArea(
+                risk.location.lat,
+                risk.location.lon,
+                risk.geofenceRadius
+            );
+
+            return {
+                ...risk,
+                surge,
+            };
+        })
+    );
+
+    res.status(200).json(enrichedRisks)
 })
 
 
@@ -121,6 +221,8 @@ export const predictRisk = AsyncHandler(async (req, res) => {
         tourist_density,
     });
 
+    const surge = await calculateSurgeForArea(location.lat, location.lon, 800);
+
     res.status(200).json({
         location,
         inputsUsed: {
@@ -132,6 +234,7 @@ export const predictRisk = AsyncHandler(async (req, res) => {
             nearbyIncidentCount: areaPrediction.derived.incidentCount,
         },
         prediction: areaPrediction.prediction,
+        surge,
     });
 });
 
@@ -159,6 +262,7 @@ export const checkGeofence = AsyncHandler(async (req, res) => {
             return {
                 zoneId: zone._id,
                 name: zone.name,
+                location: zone.location,
                 riskLevel: zone.riskLevel,
                 riskScore: zone.riskScore,
                 radiusMeters,
@@ -169,10 +273,21 @@ export const checkGeofence = AsyncHandler(async (req, res) => {
         .filter((zone) => zone.inside)
         .sort((a, b) => a.distanceMeters - b.distanceMeters);
 
+    const matchesWithSurge = await Promise.all(
+        matchedZones.map(async (zone) => ({
+            ...zone,
+            surge: await calculateSurgeForArea(
+                Number(zone.location?.lat),
+                Number(zone.location?.lon),
+                zone.radiusMeters
+            ),
+        }))
+    );
+
     res.status(200).json({
-        isInsideRiskZone: matchedZones.length > 0,
-        totalMatches: matchedZones.length,
-        nearestMatch: matchedZones[0] || null,
-        matches: matchedZones,
+        isInsideRiskZone: matchesWithSurge.length > 0,
+        totalMatches: matchesWithSurge.length,
+        nearestMatch: matchesWithSurge[0] || null,
+        matches: matchesWithSurge,
     });
 });

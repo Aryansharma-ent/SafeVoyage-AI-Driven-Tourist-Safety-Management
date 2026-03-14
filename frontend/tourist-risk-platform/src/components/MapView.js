@@ -44,12 +44,39 @@ const riskSeverity = {
   critical: 4,
 };
 
+const surgeSeverity = {
+  none: 0,
+  medium: 2,
+  high: 3,
+  critical: 4,
+};
+
 const pickHigherRiskLevel = (first, second) => {
   const firstLevel = normalizeRiskLevel(first);
   const secondLevel = normalizeRiskLevel(second);
   return (riskSeverity[secondLevel] || 0) > (riskSeverity[firstLevel] || 0)
     ? secondLevel
     : firstLevel;
+};
+
+const normalizeSurgeLevel = (level) => {
+  const value = (level || "none").toLowerCase();
+  if (value === "low") return "medium";
+  return value;
+};
+
+const pickHigherSurgeLevel = (first, second) => {
+  const firstLevel = normalizeSurgeLevel(first);
+  const secondLevel = normalizeSurgeLevel(second);
+  return (surgeSeverity[secondLevel] || 0) > (surgeSeverity[firstLevel] || 0)
+    ? secondLevel
+    : firstLevel;
+};
+
+const surgeToRiskLevel = (surgeLevel) => {
+  const normalized = normalizeSurgeLevel(surgeLevel);
+  if (normalized === "none") return "safe";
+  return normalized;
 };
 
 const riskDotIcon = (color) =>
@@ -59,6 +86,14 @@ const riskDotIcon = (color) =>
     iconSize: [14, 14],
     iconAnchor: [7, 7],
     popupAnchor: [0, -8],
+  });
+
+const surgePulseIcon = (level) =>
+  L.divIcon({
+    className: "surge-pulse-icon",
+    html: `<span class="surge-pulse-ring surge-${normalizeSurgeLevel(level)}"></span>`,
+    iconSize: [34, 34],
+    iconAnchor: [17, 17],
   });
 
 const toRadians = (value) => (value * Math.PI) / 180;
@@ -426,6 +461,11 @@ function MapView() {
     [nearbyRiskZones]
   );
 
+  const surgeHotspots = useMemo(
+    () => nearbyRiskZones.filter((zone) => normalizeSurgeLevel(zone?.surge?.surgeLevel) !== "none"),
+    [nearbyRiskZones]
+  );
+
   const userPosition = useMemo(
     () => [userLocation?.latitude, userLocation?.longitude],
     [userLocation]
@@ -436,6 +476,9 @@ function MapView() {
   };
 
   const aiRiskLevel = normalizeRiskLevel(aiPrediction?.prediction?.risk_level);
+  const predictionSurgeLevel = normalizeSurgeLevel(aiPrediction?.surge?.surgeLevel);
+  const predictionSurgeRiskLevel = surgeToRiskLevel(predictionSurgeLevel);
+
   const geofenceHighestLevel = useMemo(() => {
     if (!Array.isArray(geofenceState.matches) || !geofenceState.matches.length) {
       return null;
@@ -447,16 +490,36 @@ function MapView() {
     }, "safe");
   }, [geofenceState.matches]);
 
+  const geofenceHighestSurgeLevel = useMemo(() => {
+    if (!Array.isArray(geofenceState.matches) || !geofenceState.matches.length) {
+      return "none";
+    }
+
+    return geofenceState.matches.reduce((highest, zone) => {
+      const level = normalizeSurgeLevel(zone?.surge?.surgeLevel);
+      return pickHigherSurgeLevel(highest, level);
+    }, "none");
+  }, [geofenceState.matches]);
+
+  const geofenceSurgeRiskLevel = surgeToRiskLevel(geofenceHighestSurgeLevel);
+
   const overallRiskLevel = geofenceState.isInsideRiskZone
-    ? pickHigherRiskLevel(aiRiskLevel || "safe", geofenceHighestLevel || "safe")
-    : (aiRiskLevel || "safe");
+    ? pickHigherRiskLevel(
+        pickHigherRiskLevel(aiRiskLevel || "safe", geofenceHighestLevel || "safe"),
+        pickHigherRiskLevel(predictionSurgeRiskLevel, geofenceSurgeRiskLevel)
+      )
+    : pickHigherRiskLevel(aiRiskLevel || "safe", predictionSurgeRiskLevel);
 
   const overallRiskScore = geofenceState.isInsideRiskZone
     ? Math.max(
         Number(aiPrediction?.prediction?.risk_score || 0),
+        Number(aiPrediction?.surge?.surgeScore || 0),
         ...((geofenceState.matches || []).map((zone) => Number(zone?.riskScore || 0)))
       )
-    : Number(aiPrediction?.prediction?.risk_score || 0);
+    : Math.max(
+        Number(aiPrediction?.prediction?.risk_score || 0),
+        Number(aiPrediction?.surge?.surgeScore || 0)
+      );
 
   const activeAlertLevel = normalizeRiskLevel(riskAlert?.riskLevel);
 
@@ -559,11 +622,28 @@ function MapView() {
                     {(aiPrediction.prediction?.risk_level || "unknown").toUpperCase()}
                   </span>
                 </p>
+                <p>
+                  Surge:
+                  <span className={`badge ai-prediction-badge surge-level-${predictionSurgeLevel}`}>
+                    {predictionSurgeLevel.toUpperCase()}
+                  </span>
+                </p>
+                {Number.isFinite(aiPrediction?.surge?.spikeRatio) && (
+                  <p>Spike: {aiPrediction.surge.spikeRatio.toFixed(2)}x above normal</p>
+                )}
                 {geofenceState.isInsideRiskZone && geofenceHighestLevel && (
                   <p>
                     Geofence:
                     <span className={`badge ai-prediction-badge level-${geofenceHighestLevel}`}>
                       {geofenceHighestLevel.toUpperCase()}
+                    </span>
+                  </p>
+                )}
+                {geofenceState.isInsideRiskZone && geofenceHighestSurgeLevel !== "none" && (
+                  <p>
+                    Zone Surge:
+                    <span className={`badge ai-prediction-badge surge-level-${geofenceHighestSurgeLevel}`}>
+                      {geofenceHighestSurgeLevel.toUpperCase()}
                     </span>
                   </p>
                 )}
@@ -589,6 +669,14 @@ function MapView() {
                   <p className="risk-level">
                     Risk: <span className="badge">{zone.riskLevel || "unknown"}</span>
                   </p>
+                  {normalizeSurgeLevel(zone?.surge?.surgeLevel) !== "none" && (
+                    <p className="risk-level">
+                      Surge:
+                      <span className={`badge surge-level-${normalizeSurgeLevel(zone?.surge?.surgeLevel)}`}>
+                        {normalizeSurgeLevel(zone?.surge?.surgeLevel).toUpperCase()}
+                      </span>
+                    </p>
+                  )}
                   <p className="distance">Distance: {zone.distance ? (zone.distance / 1000).toFixed(2) + " km" : "N/A"}</p>
                   <p className="description">{zone.description}</p>
                 </div>
@@ -690,6 +778,7 @@ function MapView() {
           {renderedRiskZones.map((zone) => {
             const level = normalizeRiskLevel(zone.riskLevel);
             const color = riskColors[level] || riskColors.low;
+            const surgeLevel = normalizeSurgeLevel(zone?.surge?.surgeLevel);
 
             return (
               <FeatureGroup key={zone._id || `${zone.name}-${zone.location.lat}-${zone.location.lon}`}>
@@ -710,7 +799,10 @@ function MapView() {
                     <div className="popup-content">
                       <h4>{zone.name}</h4>
                       <p><strong>Risk Level:</strong> <span className={`risk-badge level-${level}`}>{zone.riskLevel}</span></p>
+                      <p><strong>Surge:</strong> <span className={`risk-badge surge-level-${surgeLevel}`}>{surgeLevel.toUpperCase()}</span></p>
                       <p><strong>Risk Score:</strong> {formatPercent(zone.riskScore)}</p>
+                      <p><strong>Surge Score:</strong> {formatPercent(zone?.surge?.surgeScore)}</p>
+                      <p><strong>Spike Ratio:</strong> {Number.isFinite(zone?.surge?.spikeRatio) ? `${zone.surge.spikeRatio.toFixed(2)}x` : "N/A"}</p>
                       <p><strong>Crime Rate:</strong> {formatPercent(zone.crimeRate)}</p>
                       <p><strong>Weather Score:</strong> {formatPercent(zone.weatherScore)}</p>
                       <p><strong>Terrain Score:</strong> {formatPercent(zone.terrainScore)}</p>
@@ -720,6 +812,14 @@ function MapView() {
                     </div>
                   </Popup>
                 </Marker>
+                {surgeLevel !== "none" && (
+                  <Marker
+                    position={[zone.location.lat, zone.location.lon]}
+                    icon={surgePulseIcon(surgeLevel)}
+                    interactive={false}
+                    keyboard={false}
+                  />
+                )}
               </FeatureGroup>
             );
           })}
@@ -804,6 +904,10 @@ function MapView() {
             <div className="stat-card stat-safe">
               <p className="stat-label">Safe</p>
               <p className="stat-value safe-count">{stats.safe}</p>
+            </div>
+            <div className="stat-card stat-surge">
+              <p className="stat-label">Surge Hotspots</p>
+              <p className="stat-value surge-count">{surgeHotspots.length}</p>
             </div>
           </div>
         </div>
