@@ -5,6 +5,14 @@ import { checkGeofence as checkGeofenceApi, getRiskZones, predictRisk } from "..
 import "./MapView.css";
 
 const DEFAULT_LOCATION = { latitude: 40.7128, longitude: -74.0060 };
+
+const DEMO_CITIES = {
+  jaipur:    { label: "Jaipur, Rajasthan", lat: 26.9124, lon: 75.7873 },
+  delhi:     { label: "New Delhi",        lat: 28.6139, lon: 77.2090 },
+  mumbai:    { label: "Mumbai",           lat: 18.9388, lon: 72.8354 },
+  bangalore: { label: "Bengaluru",        lat: 12.9716, lon: 77.5946 },
+  goa:       { label: "Goa",              lat: 15.2993, lon: 74.1240 },
+};
 const MAX_RENDERED_ZONES = 150;
 const RADIUS_COMMIT_DELAY_MS = 180;
 const LOCATION_ZOOM_LEVEL = 15;
@@ -138,6 +146,8 @@ function MapView() {
     matches: [],
   });
   const [riskAlert, setRiskAlert] = useState(null);
+  const [demoMode, setDemoMode] = useState(false);
+  const [demoCity, setDemoCity] = useState("jaipur");
   const mapRef = useRef(null);
   const mapCanvasRef = useRef(null);
   const insideRiskRef = useRef(false);
@@ -262,8 +272,16 @@ function MapView() {
     };
   }, [userLocation]);
 
+  const effectiveLocation = useMemo(() => {
+    if (demoMode) {
+      const city = DEMO_CITIES[demoCity] || DEMO_CITIES.jaipur;
+      return { latitude: city.lat, longitude: city.lon };
+    }
+    return userLocation;
+  }, [demoMode, demoCity, userLocation]);
+
   useEffect(() => {
-    if (!userLocation) return;
+    if (!effectiveLocation) return;
 
     let isActive = true;
     let intervalId;
@@ -297,8 +315,8 @@ function MapView() {
       try {
         const response = await checkGeofenceApi({
           location: {
-            lat: userLocation.latitude,
-            lon: userLocation.longitude,
+            lat: effectiveLocation.latitude,
+            lon: effectiveLocation.longitude,
           },
         });
 
@@ -343,10 +361,10 @@ function MapView() {
         clearInterval(intervalId);
       }
     };
-  }, [userLocation]);
+  }, [effectiveLocation]);
 
   useEffect(() => {
-    if (!userLocation) return;
+    if (!effectiveLocation) return;
 
     let isActive = true;
 
@@ -355,8 +373,8 @@ function MapView() {
         setAiLoading(true);
         const response = await predictRisk({
           location: {
-            lat: userLocation.latitude,
-            lon: userLocation.longitude,
+            lat: effectiveLocation.latitude,
+            lon: effectiveLocation.longitude,
           },
         });
 
@@ -380,7 +398,7 @@ function MapView() {
     return () => {
       isActive = false;
     };
-  }, [userLocation]);
+  }, [effectiveLocation]);
 
   useEffect(() => {
     if (!mapReady || !mapRef.current) return;
@@ -417,8 +435,14 @@ function MapView() {
     };
   }, [mapReady]);
 
+  useEffect(() => {
+    if (!demoMode || !mapRef.current) return;
+    const city = DEMO_CITIES[demoCity];
+    mapRef.current.flyTo([city.lat, city.lon], 13, { animate: true, duration: 1 });
+  }, [demoMode, demoCity]);
+
   const nearbyRiskZones = useMemo(() => {
-    if (!userLocation) return [];
+    if (!effectiveLocation) return [];
 
     return allRiskZones
       .filter((zone) =>
@@ -429,15 +453,15 @@ function MapView() {
       .map((zone) => ({
         ...zone,
         distance: getDistanceInMeters(
-          userLocation.latitude,
-          userLocation.longitude,
+          effectiveLocation.latitude,
+          effectiveLocation.longitude,
           zone.location.lat,
           zone.location.lon
         ),
       }))
       .filter((zone) => zone.distance <= searchRadius)
       .sort((a, b) => a.distance - b.distance);
-  }, [allRiskZones, searchRadius, userLocation]);
+  }, [allRiskZones, searchRadius, effectiveLocation]);
 
   const renderedRiskZones = useMemo(
     () => nearbyRiskZones.slice(0, MAX_RENDERED_ZONES),
@@ -467,8 +491,8 @@ function MapView() {
   );
 
   const userPosition = useMemo(
-    () => [userLocation?.latitude, userLocation?.longitude],
-    [userLocation]
+    () => [effectiveLocation?.latitude, effectiveLocation?.longitude],
+    [effectiveLocation]
   );
 
   const handleRadiusChange = (newRadius) => {
@@ -577,10 +601,42 @@ function MapView() {
         <div className="sidebar-content">
           <h3>Your Location</h3>
           <div className="location-info">
-            <p><strong>Latitude:</strong> {userLocation.latitude.toFixed(4)}</p>
-            <p><strong>Longitude:</strong> {userLocation.longitude.toFixed(4)}</p>
-            {Number.isFinite(locationAccuracy) && (
-              <p><strong>Accuracy:</strong> ~{locationAccuracy} m</p>
+            {demoMode ? (
+              <>
+                <span className="demo-mode-badge">DEMO MODE</span>
+                <p><strong>City:</strong> {DEMO_CITIES[demoCity].label}</p>
+                <p><strong>Latitude:</strong> {DEMO_CITIES[demoCity].lat.toFixed(4)}</p>
+                <p><strong>Longitude:</strong> {DEMO_CITIES[demoCity].lon.toFixed(4)}</p>
+              </>
+            ) : (
+              <>
+                <p><strong>Latitude:</strong> {userLocation.latitude.toFixed(4)}</p>
+                <p><strong>Longitude:</strong> {userLocation.longitude.toFixed(4)}</p>
+                {Number.isFinite(locationAccuracy) && (
+                  <p><strong>Accuracy:</strong> ~{locationAccuracy} m</p>
+                )}
+              </>
+            )}
+          </div>
+
+          <div className="demo-mode-control">
+            <button
+              type="button"
+              className={`demo-toggle-btn ${demoMode ? "demo-on" : "demo-off"}`}
+              onClick={() => setDemoMode((prev) => !prev)}
+            >
+              {demoMode ? "Exit Demo Mode" : "Demo Mode"}
+            </button>
+            {demoMode && (
+              <select
+                className="demo-city-select"
+                value={demoCity}
+                onChange={(e) => setDemoCity(e.target.value)}
+              >
+                {Object.entries(DEMO_CITIES).map(([key, city]) => (
+                  <option key={key} value={key}>{city.label}</option>
+                ))}
+              </select>
             )}
           </div>
 

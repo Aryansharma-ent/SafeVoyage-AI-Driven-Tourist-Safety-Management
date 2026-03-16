@@ -6,6 +6,61 @@
   padding: 12px;
 }
 
+/* ── Demo Mode Controls ────────────────────────────── */
+.demo-mode-badge {
+  display: inline-block;
+  background: #7c3aed;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 2px 8px;
+  border-radius: 99px;
+  margin-bottom: 6px;
+}
+
+.demo-mode-control {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0 4px;
+}
+
+.demo-toggle-btn {
+  width: 100%;
+  padding: 7px 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.demo-toggle-btn:active { transform: scale(0.97); }
+.demo-toggle-btn.demo-off {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+.demo-toggle-btn.demo-off:hover { background: #ddd6fe; }
+.demo-toggle-btn.demo-on {
+  background: #7c3aed;
+  color: #fff;
+}
+.demo-toggle-btn.demo-on:hover { background: #6d28d9; }
+
+.demo-city-select {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1.5px solid #c4b5fd;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  background: #faf5ff;
+  color: #4c1d95;
+  cursor: pointer;
+  outline: none;
+}
+.demo-city-select:focus { border-color: #7c3aed; }
+
 .map-canvas {
   position: relative;
   flex: 1;

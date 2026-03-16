@@ -17,6 +17,14 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon server/server.js",
+    "seed": "node seedDemo.js --city jaipur",
+    "seed:clear": "node seedDemo.js --clear",
+    "seed:jaipur": "node seedDemo.js --city jaipur",
+    "seed:delhi": "node seedDemo.js --city delhi",
+    "seed:mumbai": "node seedDemo.js --city mumbai",
+    "seed:bangalore": "node seedDemo.js --city bangalore",
+    "seed:goa": "node seedDemo.js --city goa",
+    "admin:create": "node createAdmin.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
