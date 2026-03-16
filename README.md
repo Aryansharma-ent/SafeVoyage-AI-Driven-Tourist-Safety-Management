@@ -17,7 +17,7 @@ https://safe-voyage-ai-driven-tourist-safe.vercel.app
   <tr>
     <td align="center"><img src="screenshots/ReportIncident.png" alt="Report Incident" width="100%" /><br/>Report Incident</td>
     <td align="center"><img src="screenshots/EmergencySOS.png" alt="Emergency SOS" width="100%" /><br/>Emergency SOS</td>
-    <td align="center"><img src="screenshots/Dashboard.png" alt="Admin Dashboard" width="100%" /><br/>Admin Dashboard</td>
+    <td align="center"><img src="screenshots/Dashboard.png" alt="User Dashboard" width="100%" /><br/>Admin Dashboard</td>
   </tr>
   <tr>
     <td align="center"><img src="screenshots/RiskMap.png" alt="Risk Zones and Geofence" width="100%" /><br/>Geofence View</td>
