@@ -1,0 +1,6 @@
+{
+  "version": 2,
+  "installCommand": "cd frontend/tourist-risk-platform && npm install",
+  "buildCommand": "cd frontend/tourist-risk-platform && npm run build",
+  "outputDirectory": "frontend/tourist-risk-platform/build"
+}
