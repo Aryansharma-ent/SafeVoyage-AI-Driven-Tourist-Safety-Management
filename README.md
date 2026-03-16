@@ -22,7 +22,7 @@ https://safe-voyage-ai-driven-tourist-safe.vercel.app
   <tr>
     <td align="center"><img src="screenshots/RiskMap.png" alt="Risk Zones and Geofence" width="100%" /><br/>Geofence View</td>
     <td align="center"><img src="screenshots/ReportIncident.png" alt="Incident Submission Flow" width="100%" /><br/>Incident Flow</td>
-    <td align="center"><img src="frontend/tourist-risk-platform/public/logo512.png" alt="SafeVoyage Logo" width="100%" /><br/>Brand</td>
+    <td align="center"><img src="screenshots/AdminDashboard.png" alt="Admin Dashboard 2" width="100%" /><br/>Admin Dashboard</td>
   </tr>
 </table>
 
