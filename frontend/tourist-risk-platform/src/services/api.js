@@ -1,7 +1,16 @@
 import axios from "axios";
 
+const normalizeApiBaseUrl = (rawUrl) => {
+  const trimmed = (rawUrl || "").trim().replace(/\/+$/, "");
+  if (!trimmed) {
+    return "http://localhost:8000/api";
+  }
+
+  return /\/api$/i.test(trimmed) ? trimmed : `${trimmed}/api`;
+};
+
 const API = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || "http://localhost:8000/api"
+  baseURL: normalizeApiBaseUrl(process.env.REACT_APP_API_URL)
 });
 
 // Add token to requests if available
