@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { getCurrentLocation, getDeviceId } from "../services/geolocation";
 import { triggerEmergency } from "../services/api";
 import "./PanicButton.css";
@@ -10,29 +10,7 @@ function PanicButton({ emergencyType = "danger", message = "Emergency SOS Alert 
   const [isPressing, setIsPressing] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (isPressing && countdown > 0) {
-      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-      return () => clearTimeout(timer);
-    } else if (isPressing && countdown === 0) {
-      handleEmergency();
-      setIsPressing(false);
-      setCountdown(3);
-    }
-  }, [isPressing, countdown]);
-
-  const handleMouseDown = () => {
-    setIsPressing(true);
-    setCountdown(3);
-    setError("");
-  };
-
-  const handleMouseUp = () => {
-    setIsPressing(false);
-    setCountdown(3);
-  };
-
-  const handleEmergency = async () => {
+  const handleEmergency = useCallback(async () => {
     setLoading(true);
     setError("");
 
@@ -57,6 +35,28 @@ function PanicButton({ emergencyType = "danger", message = "Emergency SOS Alert 
     } finally {
       setLoading(false);
     }
+  }, [emergencyType, message]);
+
+  useEffect(() => {
+    if (isPressing && countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    } else if (isPressing && countdown === 0) {
+      handleEmergency();
+      setIsPressing(false);
+      setCountdown(3);
+    }
+  }, [isPressing, countdown, handleEmergency]);
+
+  const handleMouseDown = () => {
+    setIsPressing(true);
+    setCountdown(3);
+    setError("");
+  };
+
+  const handleMouseUp = () => {
+    setIsPressing(false);
+    setCountdown(3);
   };
 
   return (
