@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "installCommand": "if [ -d frontend/tourist-risk-platform ]; then cd frontend/tourist-risk-platform; fi; npm install",
-  "buildCommand": "if [ -d frontend/tourist-risk-platform ]; then cd frontend/tourist-risk-platform; fi; npm run build",
+  "installCommand": "if [ -d frontend/tourist-risk-platform ]; then cd frontend/tourist-risk-platform; elif [ -d tourist-risk-platform ]; then cd tourist-risk-platform; fi; npm install",
+  "buildCommand": "if [ -d frontend/tourist-risk-platform ]; then cd frontend/tourist-risk-platform; elif [ -d tourist-risk-platform ]; then cd tourist-risk-platform; fi; npm run build",
   "outputDirectory": "build"
 }

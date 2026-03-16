@@ -592,7 +592,16 @@ function MapView() {
   };
 
   if (!userLocation) {
-    return <div className="map-container"><p>Getting your location...</p></div>;
+    return (
+      <div className="map-loading-screen">
+        <div className="map-loading-card">
+          <span className="map-loading-ping" aria-hidden="true" />
+          <h3>Locking Your Position</h3>
+          <p>Getting your location and preparing live safety layers...</p>
+          <div className="map-loading-shimmer" aria-hidden="true" />
+        </div>
+      </div>
+    );
   }
 
   return (
