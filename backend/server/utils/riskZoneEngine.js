@@ -132,13 +132,13 @@ const deriveRiskSignals = (incidents, currentIncident = {}) => {
 
   const currentWeight = incidentTypeWeights[currentIncident.incidentType] || incidentTypeWeights.other;
   const incidentPressure = weightedIncidentLoad + currentWeight;
-  const crimeRate = clamp(incidentPressure / 18, 0.02, 1);
+  const crimeRate = clamp(incidentPressure / 4, 0.05, 1);
 
   const uniqueDevices = new Set(incidents.map((incident) => incident.deviceId).filter(Boolean));
   if (currentIncident.deviceId) {
     uniqueDevices.add(currentIncident.deviceId);
   }
-  const touristDensity = clamp(uniqueDevices.size / 25, 0.05, 1);
+  const touristDensity = clamp(uniqueDevices.size / 8, 0.05, 1);
 
   const dominantIncidentType = getDominantIncidentType(incidents, currentIncident.incidentType);
   const description = incidentTypeToDescription[dominantIncidentType] || "city tourism";

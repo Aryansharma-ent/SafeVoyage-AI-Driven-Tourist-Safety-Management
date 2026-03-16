@@ -67,11 +67,11 @@ const statisticalFallback = async ({ crimeRate, touristDensity, location }) => {
 
   const score = Math.min(
     Math.max(
-      crimeRate * 40 +
-      weather_risk * 25 +
-      terrain_difficulty * 20 +
+      crimeRate * 55 +
+      weather_risk * 18 +
+      terrain_difficulty * 14 +
       touristDensity * 10 +
-      time_of_day * 5,
+      time_of_day * 3,
       0
     ),
     100
